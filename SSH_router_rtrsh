@@ -1,0 +1,35 @@
+#pkey_file= "/Users/rravi/.ssh/internal/rravi-external-2023-02-16"
+#pkey_file="/Users/rravi/.ssh/internal/rravi-deployed-2023-02-16"
+
+from paramiko import SSHClient
+import logging
+import paramiko
+import socket
+from paramiko.ssh_exception import BadHostKeyException, AuthenticationException, SSHException
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+client = SSHClient()
+client.load_system_host_keys()
+#client.set_missing_host_key_policy(paramiko.MissingHostKeyPolicy())
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#pkey_file= "/Users/rravi/.ssh/internal/rravi-internal-2023-02-16"
+
+
+def runremotecommand (ip,command,user='root',password="asdf..zxcv..",port=22):
+   logger.info("Executing commands on %s" % ip)
+   try:
+       client.connect(ip, port, user,password,look_for_keys=False,allow_agent=True,auth_timeout=3)
+       for i in command.split(";"):
+           logger.info("Executing command %s on %s", i, ip)
+           stdin, stdout,stderr  = client.exec_command(i)
+           for line in stdout:
+               print (line)
+
+   except (BadHostKeyException,AuthenticationException, SSHException, socket.error) as e:
+       print(f"Connection failed: {str(e)}")
+   finally:
+       client.close()
+runremotecommand('172.232.67.74','date;uptime')
